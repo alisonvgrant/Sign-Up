@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database</title>
+</head>
+<body>
+    <div id='buttonsDiv'>
+        <h2>Do you have an account?</h2>
+        <button id= 'noAccount'>No</button>
+        <button id='account'>Yes</button>
+    </div>
+
+    <div id='signUpDiv'>
+        <input id='inputUserSign' placeholder='Username'>
+        <input id='inputPassSign' placeholder='Password'>
+        <button id='signUp'>Sign Up</button>
+    </div>
+
+    <div id='loginDiv'>
+        <input id='inputUserLog' placeholder='Username'>
+        <input id='inputPassLog' placeholder='Password'>
+        <button id='login'>Login</button>
+    </div>
+
+    <h2 id='h'></h2>
+
+    <div id='optionDivA'>
+        <button id='options'>Options...</button>
+        <div id='optionDivB'>
+            <button id='changePass'>Change Password</button>
+            <br>
+            <div id='optionDivC'>
+                <input id='inputChangeUser' placeholder='Username'>
+                <input id='inputChangePass' placeholder='Current Password'>
+                <input id='newPass' placeholder='New Password'>
+                <button id='bChangePass'>Change Password</button>
+            </div>
+            <button id='logOut'>Log Out</button>
+            <br>
+            <button id='deleteAcc'>Delete Account</button>
+        </div>
+    </div>
+    <br>
+    <button id='backB'>Back</button>
+
+    <!-- only change above here -->
+    <script src="https://www.gstatic.com/firebasejs/8.0.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.0.2/firebase-database.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCxyMwxLDI6ZLt78d9yLHjGtBSPL6Te_H0",
+            authDomain: "dbtest-a806d.firebaseapp.com",
+            databaseURL: "https://dbtest-a806d-default-rtdb.firebaseio.com",
+            projectId: "dbtest-a806d",
+            storageBucket: "dbtest-a806d.appspot.com",
+            messagingSenderId: "202334704728",
+            appId: "1:202334704728:web:71a1ca26c510937e6a662d",
+            measurementId: "G-8NYZRWBWTW"
+        };
+        firebase.initializeApp(firebaseConfig)
+        const database = firebase.database();
+    </script>
+    <!-- only change under here -->
+
+    <script>
+        function makeText(words, element){
+            var text = document.createTextNode(words);
+            element.appendChild(text)
+        }
+
+        var buttonsDiv = document.getElementById('buttonsDiv');
+        var h = document.getElementById('h');
+        var signUpDiv = document.getElementById('signUpDiv');
+        var loginDiv = document.getElementById('loginDiv');
+        var backB = document.getElementById('backB');
+        var optionDivA = document.getElementById('optionDivA');
+        var optionDivB = document.getElementById('optionDivB');
+        var optionDivC = document.getElementById('optionDivC');
+        var inputChangeUser = document.getElementById('inputChangeUser');
+        var inputChangePass = document.getElementById('inputChangePass');
+        var newPass = document.getElementById('newPass');
+
+        signUpDiv.style.display='none';
+        loginDiv.style.display='none';
+        backB.style.display='none';
+        optionDivA.style.display='none';
+        optionDivB.style.display='none';
+        optionDivC.style.display='none';
+
+        function clear(){
+            signUpDiv.style.display='none';
+            loginDiv.style.display='none';
+            backB.style.display='none';
+            optionDivA.style.display='none';
+            h.textContent='';
+            buttonsDiv.style.display='block';
+            if(inputUserLog!=undefined){
+                inputUserLog.value = '';
+                inputPassLog.value = '';
+                console.log('cleared inputs');
+            }
+        }
+
+        backB.addEventListener('click', function(){
+            clear()
+        })
+
+        noAccount.addEventListener("click", function(){
+            buttonsDiv.style.display='none';
+            signUpDiv.style.display='block';
+            backB.style.display='block';
+
+            var inputUserSign = document.getElementById('inputUserSign');
+            var inputPassSign = document.getElementById('inputPassSign');
+            var signUp = document.getElementById('signUp');
+            
+            signUp.addEventListener('click', function(){
+                var user = inputUserSign.value;
+                var pass = inputPassSign.value;
+                database.ref('/userPass').push({
+                    userName: user,
+                    passWord: pass
+                })
+                clear()
+            })
+        })
+
+        account.addEventListener('click', function(){  
+            buttonsDiv.style.display='none';
+            loginDiv.style.display='block';
+            backB.style.display='block';
+            optionDivB.style.display='none';
+            var inputUserLog = document.getElementById('inputUserLog');
+            var inputPassLog = document.getElementById('inputPassLog');
+            var login = document.getElementById('login');
+            login.addEventListener('click', function(){
+                h.textContent = '';
+                database.ref('/userPass').once('value', function(snapshot){
+                    var userPassObj = snapshot.val();
+                    var userPassKeys = Object.keys(userPassObj);
+                    for(i=0;i<userPassKeys.length;i++){
+                        if(inputUserLog.value==userPassObj[userPassKeys[i]]['userName']&&inputPassLog.value==userPassObj[userPassKeys[i]]['passWord']){
+                            h.textContent='';
+                            var currentLog = {
+                                user: inputUserLog.value,
+                                pass: inputPassLog.value,
+                                key:userPassKeys[i]
+                            };
+                            console.log(currentLog)
+                            makeText('Logged In!', h);
+                            optionDivA.style.display='block';
+                            options.addEventListener('click', function(){
+                                console.log('hello');
+                                console.log(optionDivB);
+                                optionDivB.style.display='block';
+                                changePass.addEventListener('click', function(){
+                                    optionDivC.style.display='block';
+                                    bChangePass.addEventListener('click', function(){
+                                        if(inputChangeUser.value==currentLog.user&&inputChangePass.value==currentLog.pass){
+                                            database.ref(`/userPass/${currentLog.key}`).update({
+                                                userName:currentLog.user, 
+                                                passWord:newPass.value
+                                            });
+                                            optionDivC.style.display='none';
+                                        }
+                                    })
+                                })
+                                logOut.addEventListener('click', function(){
+                                    clear();
+                                })
+                                deleteAcc.addEventListener('click', function(){
+                                    database.ref(`/userPass/${currentLog.key}`).remove().then(function(){
+                                        clear();
+                                    })
+                                })
+                            })
+                        }
+                        else if(h.textContent==''){
+                            makeText('Incorrect credentials, try again!', h);
+                    }
+                    }
+                    inputUserLog.value = '';
+                    inputPassLog.value = '';
+               })
+            })
+        })
+    </script>
+</body>
+</html>
